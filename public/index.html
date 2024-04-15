@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Seismic Data Viewer</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;,">
+    <style>
+         /* Add your CSS styling here */
+         .feature-item {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            overflow: hidden; /* Prevent overflow */
+            white-space: nowrap; /* Prevent line breaks */
+            text-overflow: ellipsis; /* Add ellipsis for long text */
+        }
+
+        .error-message {
+            color: red;
+        }
+
+        #featureList {
+        display: block; /* Set to block by default */
+        max-height: 300px; /* Limit max height to prevent excessive growth */
+        overflow-y: auto; /* Add vertical scroll if content exceeds max height */
+        border-style: dashed red;
+        }
+
+        #pagination {
+            display: none; /* Initially hidden */
+        }
+
+        .error-message {
+            display: none; /* Initially hidden */
+        }
+    </style>
+</head>
+<body>
+    <h1>Seismic Data Viewer</h1>
+
+    <div id="featureList"></div>
+    <div id="pagination"></div>
+    <div id="error" class="error-message" style="display: none;"></div>
+
+    <!--Testing if comments are being updated correctly to the database-->
+    <form id="updateCommentForm">
+        <input type="hidden" id="earthquakeId" value="1"> <!-- Keep the hidden field for reference -->
+        <label for="content">Update Comment:</label>
+        <textarea id="updatedContent" name="comment[body]"></textarea>
+        <button type="button" onclick="updateComment()">Update Comment</button>
+    </form>
+
+    <script>
+        const featureList = document.getElementById('featureList');
+        const pagination = document.getElementById('pagination');
+        const errorElement = document.getElementById('error');
+        
+        function fetchData(page) {
+            const url = 'http://127.0.0.1:3000/api/v1/earthquakes/1/seismic_features?page=' + page;  // Construct the URL with the page parameter
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-store, max-age=0' // Update Cache-Control header
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                featureList.innerHTML = ''; // Clear existing data before updating
+                pagination.innerHTML = ''; // Clear existing pagination before updating
+                
+                // Update the UI with the fetched data
+                data.forEach(feature => {
+                    const featureItem = document.createElement('div');
+                    featureItem.classList.add('feature-item');
+
+                    // Use the id of the feature item to associate comments with the earthquake
+                    featureItem.addEventListener('click', function() {
+                        fetchComments(feature.id); // Use the feature id to fetch comments
+                    });
+                    
+                    if (feature.place) {
+                        featureItem.textContent = feature.place;
+                    } else {
+                        featureItem.textContent = 'No Place Available';
+                    }
+                    
+                    // Log the entire feature object to understand its structure
+                    //console.log('Feature Object:', feature);
+                    
+                    featureList.appendChild(featureItem);
+                });
+
+                // Pagination logic
+                
+            })
+            .catch(error => {
+                errorElement.textContent = 'Error fetching data. Please try again.';
+                errorElement.style.display = 'block';
+                console.error('Error fetching data:', error);
+            });
+        }
+        
+        // Needs review and debug
+        function updateComment() {
+            const updatedCommentBody = document.getElementById('updatedContent').value;
+            const earthquakeId = document.getElementById('earthquakeId').value;
+            
+            const payload = {
+                comment: {
+                    body: updatedCommentBody
+                }
+            };
+        
+            console.log('Request Payload:', payload); // Log the request payload
+        
+            fetch(`/api/v1/earthquakes/${earthquakeId}/comments`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update comment: ' + response.status + ' ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Comment updated successfully:', data);
+                alert('Comment updated successfully');
+                // Optionally add logic here to handle the updated data
+            })
+            .catch(error => {
+                console.error('Error updating comment:', error);
+                alert('Failed to update comment. Please try again. See the console for details.');
+            });
+        }
+        fetchData(1);
+    </script>
+</body>
+</html>
