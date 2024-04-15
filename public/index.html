@@ -41,13 +41,17 @@
     <div id="pagination"></div>
     <div id="error" class="error-message" style="display: none;"></div>
 
-    <!--Testing if comments are being updated correctly to the database-->
-    <form id="updateCommentForm">
-        <input type="hidden" id="earthquakeId" value="1"> <!-- Keep the hidden field for reference -->
-        <label for="content">Update Comment:</label>
-        <textarea id="updatedContent" name="comment[body]"></textarea>
-        <button type="button" onclick="updateComment()">Update Comment</button>
+    <!-- Add this form inside the body tag -->
+    <form id="commentForm">
+        <label for="earthquakeId">Earthquake ID:</label>
+        <input type="text" id="earthquakeId" name="earthquakeId" required>
+        <br>
+        <label for="commentContent">Comment:</label>
+        <textarea id="commentContent" name="commentContent" required></textarea>
+        <br>
+        <button type="submit">Submit</button>
     </form>
+
 
     <script>
         const featureList = document.getElementById('featureList');
@@ -105,43 +109,43 @@
             });
         }
         
-        // Needs review and debug
-        function updateComment() {
-            const updatedCommentBody = document.getElementById('updatedContent').value;
-            const earthquakeId = document.getElementById('earthquakeId').value;
+        // Needs review and debug is for updating comments into database
+        document.getElementById('commentForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission behavior
             
+            const earthquakeId = document.getElementById('earthquakeId').value;
+            const commentContent = document.getElementById('commentContent').value;
+            
+            const url = `http://127.0.0.1:3000/api/v1/earthquakes/${earthquakeId}/comments`;
             const payload = {
                 comment: {
-                    body: updatedCommentBody
+                    content: commentContent
                 }
             };
-        
-            console.log('Request Payload:', payload); // Log the request payload
-        
-            fetch(`/api/v1/earthquakes/${earthquakeId}/comments`, {
-                method: 'PUT',
+            
+            fetch(url, {
+                method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Failed to update comment: ' + response.status + ' ' + response.statusText);
+                    throw new Error('Failed to submit comment');
                 }
                 return response.json();
             })
             .then(data => {
-                console.log('Comment updated successfully:', data);
-                alert('Comment updated successfully');
-                // Optionally add logic here to handle the updated data
+                console.log('Comment submitted successfully:', data);
+                // Optionally, display a success message or update the UI
             })
             .catch(error => {
-                console.error('Error updating comment:', error);
-                alert('Failed to update comment. Please try again. See the console for details.');
+                console.error('Error submitting comment:', error);
+                // Optionally, display an error message or handle the error
             });
-        }
+        });
+
         fetchData(1);
     </script>
 </body>

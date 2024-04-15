@@ -7,13 +7,16 @@ module Api
         @comment = @earthquake.comments.new(comment_params)
       
         if @comment.save
-          render json: @earthquake, include: :comments, status: :created
+          render json: @comment, status: :created
         else
           render json: { errors: @comment.errors.full_messages }, status: :unprocessable_entity
         end
       end
+      
       def update
-        @comment = Comment.find(params[:id])
+        @earthquake = Earthquake.find(params[:earthquake_id])
+        @comment = @earthquake.comments.find(params[:id])
+        
         if @comment.update(comment_params)
           render json: @comment, status: :ok
         else
@@ -32,7 +35,7 @@ module Api
       private
 
       def comment_params
-        params.require(:comment).permit(:body)
+        params.require(:comment).permit(:content)
       end
     end
   end
