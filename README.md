@@ -14,7 +14,7 @@ It's basic and its's a challenge for a job application in Frogmi.
 - Ruby (version X.X.X)
 - Rails (version X.X.X)
 - Node.js and npm (for frontend development, optional)
-- PostgreSQL or other supported database
+- Sqlite3
 
 ## Setup
 
